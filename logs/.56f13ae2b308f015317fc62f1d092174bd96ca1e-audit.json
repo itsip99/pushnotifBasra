@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "logs\\.56f13ae2b308f015317fc62f1d092174bd96ca1e-audit.json",
+    "files": [
+        {
+            "date": 1779675170127,
+            "name": "logs\\errorFlutterUser-2026-05-25.log",
+            "hash": "a860b21efe1d50710f8253ecc3346f413dddcabf0fce78b4f0b927acbe1e6744"
+        }
+    ],
+    "hashType": "sha256"
+}

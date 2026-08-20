@@ -1,0 +1,42 @@
+# Butuh Docker Engine berjalan sebagai Linux containers (mis. lewat WSL2),
+# karena base image di Dockerfile (node:20-alpine) adalah image Linux.
+# RabbitMQ tetap native (di Windows host) — RABBIT_URL di .env perlu diarahkan
+# ke alamat yang bisa dijangkau dari WSL2 (bukan localhost/host.docker.internal
+# begitu saja, cek dulu cara reach Windows host dari WSL2).
+services:
+  api:
+    build: .
+    command: node dist/index.js
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  worker-hris:
+    build: .
+    command: node dist/worker.hris.js
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  worker-yamaha:
+    build: .
+    command: node dist/worker.yamaha.js
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  worker-javayoga:
+    build: .
+    command: node dist/worker.javayoga.js
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  worker-wellness:
+    build: .
+    command: node dist/worker.javawellness.js
+    env_file:
+      - .env
+    restart: unless-stopped

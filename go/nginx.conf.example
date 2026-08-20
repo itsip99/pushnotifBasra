@@ -1,0 +1,48 @@
+# Contoh reverse proxy + load balancer untuk API Go (cmd/api) yang jalan
+# multi-instance di port 5001-5003 (lihat ecosystem.config.js: go-api-1/2/3).
+#
+# Kenapa perlu ini: server Go http.ListenAndServe cuma bisa bind 1 port per
+# proses -- tidak ada cara "cluster otomatis" seperti PM2 -i untuk Node HTTP
+# server. nginx di depan yang bagi request ke instance yang lagi tidak sibuk.
+#
+# Install nginx di Windows: download versi Windows dari nginx.org (tidak
+# perlu IIS/ARR), extract, jalankan nginx.exe dengan config ini.
+#
+# Pakai file ini: copy ke conf/nginx.conf di folder install nginx, sesuaikan
+# path & port kalau perlu, lalu:
+#   nginx.exe -t          # validasi config
+#   nginx.exe -s reload   # reload tanpa downtime kalau nginx sudah jalan
+
+worker_processes auto;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    upstream go_api_backend {
+        # round-robin default -- request dibagi rata ke 3 instance.
+        # ganti jadi "least_conn;" di baris pertama upstream kalau mau
+        # request diarahkan ke instance yang paling sedikit koneksi aktifnya.
+        server 127.0.0.1:5001;
+        server 127.0.0.1:5002;
+        server 127.0.0.1:5003;
+    }
+
+    server {
+        # Port publik yang ditembak dari luar -- ganti 5000 kalau bentrok
+        # dengan API Node yang masih pakai port itu.
+        listen 5080;
+
+        location / {
+            proxy_pass http://go_api_backend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+            # kalau salah satu instance mati, otomatis coba instance lain
+            proxy_next_upstream error timeout http_502 http_503;
+            proxy_connect_timeout 5s;
+        }
+    }
+}

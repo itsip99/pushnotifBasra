@@ -1,0 +1,31 @@
+# dependencies
+/node_modules
+
+# env
+.env
+
+# token storage
+/data
+
+# compiled Go binaries -- dibuild ulang saat deploy, bukan disimpan di git
+/go/bin
+
+# Firebase/service-account credential files (private key asli) -- JANGAN
+# pernah di-commit. Deploy manual/copy file ini langsung ke server, path-nya
+# harus tetap sama seperti yang direferensikan di kode (services/*/*.json,
+# go/credentials/*.json).
+go/credentials/*.json
+src/services/BasraMobile/*.json
+src/services/SPKBasra/*.json
+src/services/fixupMoto/*.json
+src/services/hirs/*.json
+src/services/javaWellness/*.json
+src/services/javaYoga/*.json
+src/services/lsa/*.json
+dist/services/BasraMobile/*.json
+dist/services/SPKBasra/*.json
+dist/services/fixupMoto/*.json
+dist/services/hirs/*.json
+dist/services/javaWellness/*.json
+dist/services/javaYoga/*.json
+dist/services/lsa/*.json
