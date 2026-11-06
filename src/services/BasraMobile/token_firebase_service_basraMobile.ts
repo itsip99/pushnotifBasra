@@ -1,12 +1,12 @@
 const { JWT } = require('google-auth-library');
-import _ from "lodash"
+import { createTokenCache } from "../tokenCache";
 
 
 const scopes = 'https://www.googleapis.com/auth/firebase.messaging'
 
 
-export function getAccessTokenBasraMobile() {
-    return new Promise(async function (resolve, reject) {
+function loadAccessToken(): Promise<string> {
+    return new Promise(function (resolve, reject) {
         const key = require("./basra-mobile-86f72-firebase-adminsdk-3nbag-ca009489f4.json");
         const jwtClient = new JWT(
             {
@@ -26,3 +26,7 @@ export function getAccessTokenBasraMobile() {
 
     });
 }
+
+const cache = createTokenCache(loadAccessToken);
+
+export const getAccessTokenBasraMobile = cache.getToken;

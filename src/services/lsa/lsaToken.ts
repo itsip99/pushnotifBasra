@@ -1,30 +1,7 @@
 import { getAccessTokenLSA } from "./token_firebase_service_lsa";
+import { createTokenCache } from "../tokenCache";
 
-let cachedToken: string | null = null;
-let tokenExpiresAt: number | null = null;
+const cache = createTokenCache(getAccessTokenLSA);
 
-export async function getCachedLsaToken(): Promise<string> {
-
-  const now = Date.now();
-
-  // kalau token masih valid ambil dari cache
-  if (cachedToken && tokenExpiresAt && now < tokenExpiresAt) {
-    return cachedToken;
-  }
-
-  // kalau belum ada token / expired ambil baru
-  const token = await getAccessTokenLSA();
-
-  cachedToken = token;
-
-  // token Google valid ~3600s, kita amanin jadi 55 menit
-  tokenExpiresAt = now + (55 * 60 * 1000);
-
-  return cachedToken;
-}
-
-
-export function clearCachedToken() {
-  cachedToken = null;
-  tokenExpiresAt = null;
-}
+export const getCachedLsaToken = cache.getToken;
+export const clearCachedToken = cache.clearToken;

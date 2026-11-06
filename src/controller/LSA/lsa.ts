@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { getCachedLsaToken } from '../../services/lsa/lsaToken';
 import axios from "axios";
+import { fcmAgent } from "../../config/httpAgent";
 import l from "lodash";
 import { logger, loggerSuccess } from '../../logger/logger';
 
@@ -84,7 +85,8 @@ export const sendNotificationbyTopic = async (req: Request, res: Response): Prom
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
-                }
+                },
+                httpsAgent: fcmAgent
             })
 
             res.status(responseData.status).json({

@@ -1,6 +1,7 @@
 import express, { Request, Response, response } from 'express';
 import { getCachedjavaYogaToken } from '../../services/javaYoga/javaToken';
 import axios from "axios";
+import { fcmAgent } from "../../config/httpAgent";
 import l from "lodash";
 import { logger, loggerSuccess } from '../../logger/logger';
 
@@ -106,7 +107,8 @@ export const sendNotificationbyTopic = async (req: Request, res: Response): Prom
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
-                }
+                },
+                httpsAgent: fcmAgent
             })
 
 

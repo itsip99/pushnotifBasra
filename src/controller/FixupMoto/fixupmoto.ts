@@ -2,7 +2,8 @@ import express, { Request, Response, response } from 'express';
 import axios from "axios";
 import l from "lodash";
 
-import { FIXUPMOTO_FCM_URL, getAccessTokenFixUpMoto } from '../../services/fixupMoto/token_firebase_service_fixupMoto';
+import { FIXUPMOTO_FCM_URL } from '../../services/fixupMoto/token_firebase_service_fixupMoto';
+import { getCachedFixUpMotoToken } from '../../services/fixupMoto/fixupMotoToken';
 import { logger, loggerSuccess } from '../../logger/logger';
 import color from 'colors';
 import { fcmAgent } from '../../config/httpAgent';
@@ -67,7 +68,7 @@ export const sendNotificationbyTopic = async (req: Request, res: Response): Prom
         });
     } else {
         // Validation successful
-        const accessToken = await getAccessTokenFixUpMoto();
+        const accessToken = await getCachedFixUpMotoToken();
         // console.log(accessToken)
 
         // const topicName = 'industry-tech';

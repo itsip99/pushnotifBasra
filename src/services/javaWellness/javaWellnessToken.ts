@@ -1,38 +1,17 @@
 import { getAccessTokenJavaWellness } from "./token_firebase_service_javaWellness";
 import { logger, logErrorBlock } from "../../logger/logger";
+import { createTokenCache } from "../tokenCache";
 
-let cachedToken: string | null = null;
-let tokenExpiresAt: number | null = null;
-let refreshing: Promise<string> | null = null;
-
-export async function getCachedJavaWellnessToken(): Promise<string> {
-  const now = Date.now();
-
-  if (cachedToken && tokenExpiresAt && now < tokenExpiresAt) {
-    return cachedToken;
+const cache = createTokenCache(async () => {
+  try {
+    const token = await getAccessTokenJavaWellness();
+    logger.info("[WELLNESS] getCachedJavaWellnessToken | token diperbarui | cache 55 menit");
+    return token;
+  } catch (err: any) {
+    logErrorBlock({ source: "getCachedJavaWellnessToken", type: "TOKEN_REFRESH_FAIL", flow: ["GET_TOKEN", "CALL_GOOGLE", "FAIL"], error: err?.message || String(err) });
+    throw err;
   }
+});
 
-  if (!refreshing) {
-    refreshing = getAccessTokenJavaWellness()
-      .then(token => {
-        cachedToken = token;
-        tokenExpiresAt = Date.now() + 55 * 60 * 1000;
-        refreshing = null;
-        logger.info(`[WELLNESS] getCachedJavaWellnessToken | token refreshed | expires in 55min`);
-        return token;
-      })
-      .catch(err => {
-        logErrorBlock({ source: "getCachedJavaWellnessToken", type: "TOKEN_REFRESH_FAIL", flow: ["GET_TOKEN", "CALL_GOOGLE", "FAIL"], error: err?.message || String(err) });
-        refreshing = null;
-        throw err;
-      });
-  }
-
-  return refreshing;
-}
-
-export function clearCachedWellnessToken() {
-  cachedToken = null;
-  tokenExpiresAt = null;
-  refreshing = null;
-}
+export const getCachedJavaWellnessToken = cache.getToken;
+export const clearCachedWellnessToken = cache.clearToken;

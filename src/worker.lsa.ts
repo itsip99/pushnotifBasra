@@ -1,5 +1,6 @@
 // worker.lsa.ts
 import axios from "axios";
+import { fcmAgent } from "./config/httpAgent";
 import color from "colors";
 import { ConsumeMessage } from "amqplib";
 
@@ -54,6 +55,7 @@ async function sendToFcm(job: LsaJob, token: string) {
         "Content-Type": "application/json",
       },
       timeout: 15000,
+      httpsAgent: fcmAgent,
     }
   );
 }
