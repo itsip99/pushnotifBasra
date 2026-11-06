@@ -1,19 +1,19 @@
 @echo off
 setlocal
-:: Build + restart PM2 di server.
-:: Script ini TIDAK melakukan git pull: workflow (atau operator) pull dulu,
-:: karena cmd membaca .cmd baris per baris dan file ini bisa berubah saat pull.
+:: Build + restart PM2 di server (folder aplikasi = folder induk script ini).
+:: Kode disalin ke folder aplikasi oleh workflow GitHub Actions (.github/workflows/deploy.yml)
+:: sebelum script ini dipanggil; script ini sendiri tidak mengambil kode.
 ::
-:: Manual di server:
-::   git pull --ff-only
-::   scripts\deploy.cmd
+:: Manual di server (setelah kode disalin):
+::   C:\Users\Administrator\Documents\ServiceNotif\STSJ\scripts\deploy.cmd
 ::
 :: Hanya restart app yang sudah ada di PM2. Kalau env / ecosystem.config.js
 :: berubah, tetap perlu pm2 delete <id> lalu pm2 start ecosystem.config.js --only <name>.
 
 cd /d "%~dp0.."
 echo [deploy] folder: %CD%
-git log -1 --oneline
+if exist DEPLOYED_VERSION.txt (set /p DEPLOYED=<DEPLOYED_VERSION.txt) else (set "DEPLOYED=-")
+echo [deploy] versi: %DEPLOYED%
 
 :: ---- dependency ----
 :: npm ci menghapus node_modules; app yang sedang jalan bisa gagal require modul

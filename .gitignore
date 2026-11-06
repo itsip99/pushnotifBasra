@@ -19,3 +19,6 @@
 # credential service account Firebase -- disalin manual ke server, JANGAN masuk git
 /src/services/**/*.json
 /go/credentials/*.json
+
+# penanda versi yang sedang jalan di server
+/DEPLOYED_VERSION.txt
