@@ -1,0 +1,22 @@
+name: Deploy server
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # tombol "Run workflow" manual di tab Actions
+
+# Cegah dua deploy jalan bersamaan (git pull/tsc/pm2 restart saling tabrak)
+concurrency:
+  group: deploy-server
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Runner dipasang di server Windows sebagai service dengan user Administrator,
+    # supaya perintah pm2 melihat proses yang sama dengan yang sedang jalan.
+    runs-on: [self-hosted, windows]
+    steps:
+      # Tidak pakai actions/checkout: deploy.cmd sendiri yang git pull di folder server
+      - name: Jalankan deploy.cmd
+        shell: cmd
+        run: call C:\Users\Administrator\Documents\ServiceNotif\STSJ_git\deploy.cmd

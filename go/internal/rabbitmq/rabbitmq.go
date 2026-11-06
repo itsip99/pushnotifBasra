@@ -15,11 +15,12 @@ import (
 // supaya worker Go dan worker Node bisa saling konsumsi/produksi lewat
 // RabbitMQ yang sama selama masa migrasi bertahap.
 const (
-	QUEUE          = "push_jobs"
-	JAVA_QUEUE     = "push_jobs_javayoga"
-	YAMAHA_QUEUE   = "push_jobs_yamaha"
-	WELLNESS_QUEUE = "push_jobs_javawellness"
-	LSA_QUEUE      = "push_jobs_lsa"
+	QUEUE           = "push_jobs"
+	JAVA_QUEUE      = "push_jobs_javayoga"
+	YAMAHA_QUEUE    = "push_jobs_yamaha"
+	WELLNESS_QUEUE  = "push_jobs_javawellness"
+	LSA_QUEUE       = "push_jobs_lsa"
+	FIXUPMOTO_QUEUE = "push_jobs_fixupmoto"
 )
 
 var (

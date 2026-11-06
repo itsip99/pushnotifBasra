@@ -147,6 +147,8 @@ function logBlock(
     status?: number;
     message?: string;
     meta?: any;
+    fcmId?: string;
+    ms?: number;
   }
 ) {
   const header = "========== HIRS WORKER ==========";
@@ -159,6 +161,9 @@ function logBlock(
     `retry : ${payload.retry}`,
     payload.status !== undefined ? `http  : ${payload.status}` : null,
     `flow  : ${payload.flow.join(" -> ")}`,
+    // SENT = FCM menerima pesan (fcmId ada), belum bukti notif tampil di HP
+    payload.fcmId ? `fcmId : ${payload.fcmId}` : null,
+    payload.ms !== undefined ? `ms    : ${payload.ms}` : null,
     `meta  : ${metaToLog(payload.meta)}`,
     payload.message ? `error : ${payload.message}` : null,
   ]
@@ -227,16 +232,17 @@ export async function startWorker() {
         return;
       }
 
+      const startedAt = Date.now();
       try {
         // [4] Ambil token FCM (dari cache atau minta baru ke Google)
         const token = await getCachedHIRSToken();
 
         // [5] Kirim notifikasi ke FCM
-        await sendNotification(job, token);
+        const res = await sendNotification(job, token);
 
         // [6] BERHASIL — log, ack, lalu trigger update ke Yamaha
         flow.push("SENT");
-        logBlock("info", { jobId, userId, jenis, retry, flow, meta: job.metaData });
+        logBlock("info", { jobId, userId, jenis, retry, flow, status: res.status, fcmId: res.data?.name, ms: Date.now() - startedAt, meta: job.metaData });
         pushYamahaCallback(ch, job);
         ch.ack(msg);
         return;
@@ -250,10 +256,10 @@ export async function startWorker() {
           clearCachedToken();
           try {
             const newToken = await getCachedHIRSToken();
-            await sendNotification(job, newToken);
+            const res = await sendNotification(job, newToken);
 
             flow.push("SENT");
-            logBlock("info", { jobId, userId, jenis, retry, flow, status, meta: job.metaData });
+            logBlock("info", { jobId, userId, jenis, retry, flow, status: res.status, fcmId: res.data?.name, ms: Date.now() - startedAt, meta: job.metaData });
             pushYamahaCallback(ch, job);
             ch.ack(msg);
             return;

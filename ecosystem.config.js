@@ -14,7 +14,9 @@ module.exports = {
       watch: false,
       max_restarts: 10,
       restart_delay: 3000,
-      env: { NODE_ENV: "production" },
+      // RABBIT_URL wajib eksplisit: require("dotenv") di atas ikut memuat
+      // RABBIT_URL dari .env (host.docker.internal, khusus Docker).
+      env: { NODE_ENV: "production", RABBIT_URL: "amqp://admin:suryatimur@localhost" },
     },
     {
       name: "hris-worker",
@@ -24,7 +26,9 @@ module.exports = {
       watch: false,
       max_restarts: 10,
       restart_delay: 3000,
-      env: { NODE_ENV: "production" },
+      // RABBIT_URL wajib eksplisit: require("dotenv") di atas ikut memuat
+      // RABBIT_URL dari .env (host.docker.internal, khusus Docker).
+      env: { NODE_ENV: "production", RABBIT_URL: "amqp://admin:suryatimur@localhost" },
     },
     {
       name: "yamaha-worker",
@@ -34,7 +38,9 @@ module.exports = {
       watch: false,
       max_restarts: 10,
       restart_delay: 3000,
-      env: { NODE_ENV: "production" },
+      // RABBIT_URL wajib eksplisit: require("dotenv") di atas ikut memuat
+      // RABBIT_URL dari .env (host.docker.internal, khusus Docker).
+      env: { NODE_ENV: "production", RABBIT_URL: "amqp://admin:suryatimur@localhost" },
     },
     {
       name: "wellness-worker",
@@ -44,7 +50,9 @@ module.exports = {
       watch: false,
       max_restarts: 10,
       restart_delay: 3000,
-      env: { NODE_ENV: "production" },
+      // RABBIT_URL wajib eksplisit: require("dotenv") di atas ikut memuat
+      // RABBIT_URL dari .env (host.docker.internal, khusus Docker).
+      env: { NODE_ENV: "production", RABBIT_URL: "amqp://admin:suryatimur@localhost" },
     },
     {
       name: "lsa-worker",
@@ -54,7 +62,21 @@ module.exports = {
       watch: false,
       max_restarts: 10,
       restart_delay: 3000,
-      env: { NODE_ENV: "production" },
+      // RABBIT_URL wajib eksplisit: require("dotenv") di atas ikut memuat
+      // RABBIT_URL dari .env (host.docker.internal, khusus Docker).
+      env: { NODE_ENV: "production", RABBIT_URL: "amqp://admin:suryatimur@localhost" },
+    },
+    {
+      name: "fixupmoto-worker",
+      script: "dist/worker.fixupmoto.js",
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_restarts: 10,
+      restart_delay: 3000,
+      // RABBIT_URL wajib eksplisit: require("dotenv") di atas ikut memuat
+      // RABBIT_URL dari .env (host.docker.internal, khusus Docker).
+      env: { NODE_ENV: "production", RABBIT_URL: "amqp://admin:suryatimur@localhost" },
     },
 
     // ─── Binary Go (menggantikan worker Node di atas setelah teruji) ─────
@@ -120,6 +142,21 @@ module.exports = {
       env: {
         RABBIT_URL: "amqp://admin:suryatimur@localhost",
         JAVAYOGA_FIREBASE_CREDENTIAL: "./go/credentials/javayoga-f1963-firebase-adminsdk-lyt2d-9ebeeeacb7.json",
+      },
+    },
+    {
+      name: "go-worker-fixupmoto",
+      script: "./go/bin/worker-fixupmoto.exe",
+      interpreter: "none",
+      instances: 3,
+      exec_mode: "fork",
+      autorestart: true,
+      watch: false,
+      max_restarts: 10,
+      restart_delay: 3000,
+      env: {
+        RABBIT_URL: "amqp://admin:suryatimur@localhost",
+        FIXUPMOTO_FIREBASE_CREDENTIAL: "./go/credentials/fixupmoto-service-account.json",
       },
     },
 

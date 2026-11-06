@@ -81,16 +81,16 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 // bebas bentuk), dan tag `json:"..."` itu yang bilang ke JSON decoder "field Go ini
 // mapping ke key JSON apa" (setara nama key biasa di TS karena TS object key = JSON key).
 type reqBody struct {
-	Jenis                string                 `json:"jenis"`
-	To                   string                 `json:"to"`
-	Notif                map[string]string      `json:"notif"`               // ~ Record<string,string>
-	Data                 map[string]string      `json:"data"`
-	UserID               string                 `json:"userid"`
-	Msg                  string                 `json:"msg"`
-	MetaData             map[string]interface{} `json:"metaData"`            // ~ Record<string, any>
-	NotificationKey      string                 `json:"notification_key"`
-	NotificationKeyName  string                 `json:"notification_key_name"`
-	RegistrationIDs      []string                `json:"registration_ids"`   // ~ string[]
+	Jenis               string                 `json:"jenis"`
+	To                  string                 `json:"to"`
+	Notif               map[string]string      `json:"notif"` // ~ Record<string,string>
+	Data                map[string]string      `json:"data"`
+	UserID              string                 `json:"userid"`
+	Msg                 string                 `json:"msg"`
+	MetaData            map[string]interface{} `json:"metaData"` // ~ Record<string, any>
+	NotificationKey     string                 `json:"notification_key"`
+	NotificationKeyName string                 `json:"notification_key_name"`
+	RegistrationIDs     []string               `json:"registration_ids"` // ~ string[]
 }
 
 // writeJSON = helper `res.status(status).json(body)` versi Go.
@@ -329,14 +329,28 @@ func (h *Handler) sendNotificationByDeviceToken(_ context.Context, w http.Respon
 			Data:         body.Data,
 			Android: map[string]interface{}{
 				"priority": "high",
+				// channel_id must match the app's Notifications.kt. Old app
+				// versions without this channel fall back to their default one.
 				"notification": map[string]any{
-					"sound":      "announcement.mp3",
-					"channel_id": "high_importance_channel_v2",
+					"sound":                   "announcement.mp3",
+					"channel_id":              "hris_critical_v3",
+					"notification_priority":   "PRIORITY_MAX",
+					"visibility":              "PUBLIC",
+					"default_vibrate_timings": true,
 				},
 			},
 			APNS: map[string]interface{}{
-				"payload":     map[string]any{"aps": map[string]any{}},
-				"headers":     map[string]any{"mutable-content": "1"},
+				// time-sensitive needs the app's time-sensitive entitlement;
+				// without it iOS shows a normal alert with sound.
+				"payload": map[string]any{"aps": map[string]any{
+					"sound":              "default",
+					"interruption-level": "time-sensitive",
+				}},
+				"headers": map[string]any{
+					"mutable-content": "1",
+					"apns-priority":   "10",
+					"apns-push-type":  "alert",
+				},
 				"fcm_options": map[string]any{},
 			},
 		},

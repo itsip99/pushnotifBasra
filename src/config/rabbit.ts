@@ -11,6 +11,7 @@ export const JAVA_QUEUE = "push_jobs_javayoga";
 export const YAMAHA_QUEUE = "push_jobs_yamaha";
 export const WELLNESS_QUEUE = "push_jobs_javawellness";
 export const LSA_QUEUE = "push_jobs_lsa";
+export const FIXUPMOTO_QUEUE = "push_jobs_fixupmoto";
 
 const RABBIT_URL = process.env.RABBIT_URL || "amqp://admin:suryatimur@localhost";
 

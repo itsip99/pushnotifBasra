@@ -7,6 +7,7 @@ package fcmauth
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"sync"
 
@@ -17,6 +18,9 @@ import (
 const Scope = "https://www.googleapis.com/auth/firebase.messaging"
 
 type TokenProvider struct {
+	// ProjectID diambil dari field project_id di service account JSON.
+	ProjectID string
+
 	mu     sync.Mutex
 	makeTS func(ctx context.Context) oauth2.TokenSource
 	src    oauth2.TokenSource
@@ -33,7 +37,13 @@ func NewTokenProvider(credentialFile string) (*TokenProvider, error) {
 		return nil, err
 	}
 
+	var meta struct {
+		ProjectID string `json:"project_id"`
+	}
+	_ = json.Unmarshal(data, &meta)
+
 	tp := &TokenProvider{
+		ProjectID: meta.ProjectID,
 		makeTS: func(ctx context.Context) oauth2.TokenSource {
 			return cfg.TokenSource(ctx)
 		},

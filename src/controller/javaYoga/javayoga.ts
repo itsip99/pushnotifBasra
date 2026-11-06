@@ -8,6 +8,21 @@ import { logger, loggerSuccess } from '../../logger/logger';
 import color from 'colors';
 import { JAVA_QUEUE, getChannel } from '../../config/rabbit';
 
+// Prioritas tinggi + suara di Android (channel harus ada di app) dan iOS.
+const ANDROID_CONFIG = {
+    priority: "HIGH",
+    notification: {
+        channel_id: "javawellness_important",
+        sound: "default",
+        default_vibrate_timings: true,
+        visibility: "PUBLIC"
+    }
+};
+
+const APNS_CONFIG = {
+    headers: { "apns-priority": "10" },
+    payload: { aps: { sound: "default", "interruption-level": "time-sensitive" } }
+};
 
 const handleError = (res: Response, error: any, token: string) => {
     if (error.response && error.response.data && error.response.data.error) {
@@ -80,10 +95,9 @@ export const sendNotificationbyTopic = async (req: Request, res: Response): Prom
             "message": {
                 "topic": to,
                 "notification": notif,
-                "data": data
-                // "android": {
-                //     "notification": notif
-                // }
+                "data": data,
+                "android": ANDROID_CONFIG,
+                "apns": APNS_CONFIG
             }
         };
 
@@ -136,7 +150,15 @@ export const sendNotificationbyDeviceToken = async (req: Request, res: Response)
       const ch = await getChannel();
   
       // ?? payload untuk worker
-      const job = { "message": { "token": to, "notification": notif, "data": data } };
+      const job = {
+        "message": {
+          "token": to,
+          "notification": notif,
+          "data": data,
+          "android": ANDROID_CONFIG,
+          "apns": APNS_CONFIG
+        }
+      };
   
       // ?? kirim ke queue
       ch.sendToQueue(

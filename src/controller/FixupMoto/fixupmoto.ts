@@ -2,13 +2,18 @@ import express, { Request, Response, response } from 'express';
 import axios from "axios";
 import l from "lodash";
 
-import { getAccessTokenFixUpMoto } from '../../services/fixupMoto/token_firebase_service_fixupMoto';
-import { logger } from '../../logger/logger';
+import { FIXUPMOTO_FCM_URL, getAccessTokenFixUpMoto } from '../../services/fixupMoto/token_firebase_service_fixupMoto';
+import { logger, loggerSuccess } from '../../logger/logger';
 import color from 'colors';
 import { fcmAgent } from '../../config/httpAgent';
+import { FIXUPMOTO_QUEUE, getChannel } from '../../config/rabbit';
 
+function maskToken(token: string): string {
+    if (!token || token.length < 10) return token;
+    return `${token.slice(0, 6)}...${token.slice(-4)}`;
+}
 
-const handleError = (res: Response, error: any, token: string) => {
+const handleError =(res: Response, error: any, token: string) => {
     if (error.response && error.response.data && error.response.data.error) {
 
        
@@ -80,7 +85,7 @@ export const sendNotificationbyTopic = async (req: Request, res: Response): Prom
         };
 
         try {
-            const responseData = await axios.post('https://fcm.googleapis.com/v1/projects/fixupmoto-5e9cb/messages:send', JSON.stringify(message), {
+            const responseData = await axios.post(FIXUPMOTO_FCM_URL, JSON.stringify(message), {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${accessToken}`
@@ -115,14 +120,14 @@ export const sendNotificationbyDeviceToken = async (req: Request, res: Response)
                 'messages': 'to atau data tidak boleh kosong'
             },
         });
-    } else {
-        // Validation successful
-        const accessToken = await getAccessTokenFixUpMoto();
+        return;
+    }
 
-        // const topicName = 'industry-tech';
+    try {
+        const ch = await getChannel();
 
-        const message = {
-
+        // payload untuk worker.fixupmoto.ts
+        const job = {
             "message": {
                 "token": to,
                 "notification": notif,
@@ -130,32 +135,41 @@ export const sendNotificationbyDeviceToken = async (req: Request, res: Response)
             }
         };
 
-        try {
-            const responseData = await axios.post('https://fcm.googleapis.com/v1/projects/fixupmoto-5e9cb/messages:send', JSON.stringify(message), {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                },
-                httpsAgent: fcmAgent
-            })
+        // jobId ditaruh di header/properti AMQP, bukan di body, supaya format job
+        // yang dibaca worker Go tetap sama; worker Node membacanya untuk pelacakan.
+        const createdAt = Date.now();
+        const jobId = `${createdAt}-${Math.random().toString(16).slice(2)}`;
 
-
-            res.status(responseData.status).json({
-                'meta': {
-                    'code': 100,
-                    'status': 'Success',
-                    'messages': 'Success sending notification'
-                },
-            });
-
-            console.error(` ${color.green('FIXUPMOTOFCM')}  | status: ${color.green('Success')}`);
-
-
-            logger.info('Notification sent successfully:', responseData.data);
-
-        } catch (error: any) {
-
-            handleError(res, error,message.message.token)
+        const ok = ch.sendToQueue(
+            FIXUPMOTO_QUEUE,
+            Buffer.from(JSON.stringify(job)),
+            {
+                persistent: true,
+                contentType: "application/json",
+                messageId: jobId,
+                timestamp: createdAt,
+                headers: { "x-retry": 0, "x-job-id": jobId, "x-created-at": createdAt },
+            }
+        );
+        if (!ok) {
+            // false = buffer channel penuh, pesan tetap dikirim setelah drain; bukan ditolak broker
+            logger.warn(`[FIXUPMOTO] QUEUE_BUFFER_FULL | jobId=${jobId} | pesan tetap di-buffer`);
         }
+
+        res.status(200).json({
+            'meta': {
+                'code': 100,
+                'status': 'Success',
+                'messages': 'Notification queued successfully'
+            },
+        });
+
+        loggerSuccess.info(`[FIXUPMOTO] QUEUED | jobId=${jobId} | queue=${FIXUPMOTO_QUEUE} | token=${maskToken(String(to))}`);
+    } catch (error: any) {
+        logger.error(`FIXUPMOTTO | Queue push failed | ${error?.message}`);
+        console.error("Queue push failed:", error?.message);
+        res.status(500).json({
+            meta: { status: 500, messages: "Failed to queue notification" }
+        });
     }
 };

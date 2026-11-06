@@ -10,6 +10,22 @@ import { fcmAgent } from '../../config/httpAgent';
 
 const FCM_URL = "https://fcm.googleapis.com/v1/projects/javawellness-3c6ad/messages:send";
 
+// Prioritas tinggi + suara di Android (channel harus ada di app) dan iOS.
+const ANDROID_CONFIG = {
+    priority: "HIGH",
+    notification: {
+        channel_id: "javawellness_important",
+        sound: "default",
+        default_vibrate_timings: true,
+        visibility: "PUBLIC"
+    }
+};
+
+const APNS_CONFIG = {
+    headers: { "apns-priority": "10" },
+    payload: { aps: { sound: "default", "interruption-level": "time-sensitive" } }
+};
+
 const handleError = (res: Response, error: any, token: string) => {
     if (error.response && error.response.data && error.response.data.error) {
         const firebaseErrorMessage = error.response.data.error.message;
@@ -77,7 +93,9 @@ export const sendNotificationbyTopic = async (req: Request, res: Response): Prom
         "message": {
             "topic": to,
             "notification": notif,
-            "data": data
+            "data": data,
+            "android": ANDROID_CONFIG,
+            "apns": APNS_CONFIG
         }
     };
 
@@ -142,7 +160,13 @@ export const sendNotificationbyDeviceToken = async (req: Request, res: Response)
             createdAt,
             ttlMs,
             metaData,
-            message: { token: to, notification: notif, data },
+            message: {
+                token: to,
+                notification: notif,
+                data,
+                android: ANDROID_CONFIG,
+                apns: APNS_CONFIG
+            },
         };
 
         const ok = ch.sendToQueue(WELLNESS_QUEUE, Buffer.from(JSON.stringify(job)), {
