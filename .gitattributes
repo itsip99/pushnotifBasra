@@ -1,2 +1,3 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# file batch Windows wajib CRLF, kalau LF label/goto di cmd bisa rusak
+*.cmd text eol=crlf
+*.bat text eol=crlf

@@ -15,8 +15,15 @@ jobs:
     # Runner dipasang di server Windows sebagai service dengan user Administrator,
     # supaya perintah pm2 melihat proses yang sama dengan yang sedang jalan.
     runs-on: [self-hosted, windows]
-    steps:
-      # Tidak pakai actions/checkout: deploy.cmd sendiri yang git pull di folder server
-      - name: Jalankan deploy.cmd
+    defaults:
+      run:
         shell: cmd
-        run: call C:\Users\Administrator\Documents\ServiceNotif\STSJ_git\deploy.cmd
+        working-directory: C:\Users\Administrator\Documents\ServiceNotif\STSJ_git
+    steps:
+      # Tidak pakai actions/checkout: aplikasi jalan langsung dari folder clone di server.
+      # Pull dipisah dari deploy.cmd supaya script tidak berubah saat sedang dijalankan.
+      - name: git pull
+        run: git pull --ff-only
+
+      - name: Build + restart PM2
+        run: call scripts\deploy.cmd
