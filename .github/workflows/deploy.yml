@@ -18,7 +18,7 @@ jobs:
     defaults:
       run:
         shell: cmd
-        working-directory: C:\Users\Administrator\Documents\ServiceNotif\STSJ_git
+        working-directory: C:\Users\Administrator\Documents\GitHub\pushnotifBasra
     steps:
       # Tidak pakai actions/checkout: aplikasi jalan langsung dari folder clone di server.
       # Pull dipisah dari deploy.cmd supaya script tidak berubah saat sedang dijalankan.
