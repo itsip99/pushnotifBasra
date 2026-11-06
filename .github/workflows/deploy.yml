@@ -5,15 +5,10 @@ on:
     branches: [main]
   workflow_dispatch: # tombol "Run workflow" manual di tab Actions
 
-# Cegah dua deploy jalan bersamaan (copy/tsc/pm2 restart saling tabrak)
+# Cegah dua deploy jalan bersamaan (git pull/tsc/pm2 restart saling tabrak)
 concurrency:
   group: deploy-server
   cancel-in-progress: false
-
-env:
-  # Folder yang dijalankan PM2. Berisi .env, credential, node_modules yang
-  # TIDAK ada di git, jadi kode dari repo disalin ke sini, bukan sebaliknya.
-  APP_DIR: C:\Users\Administrator\Documents\ServiceNotif\STSJ
 
 jobs:
   deploy:
@@ -23,20 +18,13 @@ jobs:
     defaults:
       run:
         shell: cmd
+        # Folder clone yang dijalankan PM2 (berisi .env + credential yang tidak ada di git)
+        working-directory: C:\Users\Administrator\Documents\GitHub\pushnotifBasra
     steps:
-      - uses: actions/checkout@v4
-
-      # Salin kode ke folder aplikasi. Yang dikecualikan: file runtime/lokal server
-      # (.env, node_modules, dist, logs, binary Go). Credential tidak ada di repo,
-      # jadi file credential di server tidak tertimpa. Tidak pakai /MIR supaya
-      # file yang hanya ada di server tidak terhapus.
-      - name: Salin kode ke folder aplikasi
-        run: |
-          robocopy "%GITHUB_WORKSPACE%" "%APP_DIR%" /E /XD .git .github node_modules dist logs "%GITHUB_WORKSPACE%\go\bin" /XF .env /NJH /NJS /NDL /NFL /NP
-          if %ERRORLEVEL% GEQ 8 exit /b 1
-          >"%APP_DIR%\DEPLOYED_VERSION.txt" echo %GITHUB_SHA%
-          echo versi: %GITHUB_SHA%
-          exit /b 0
+      # Tidak pakai actions/checkout: aplikasi jalan langsung dari folder clone di server.
+      # Pull dipisah dari deploy.cmd supaya script tidak berubah saat sedang dijalankan.
+      - name: git pull
+        run: git pull --ff-only
 
       - name: Build + restart PM2
-        run: call "%APP_DIR%\scripts\deploy.cmd"
+        run: call scripts\deploy.cmd
