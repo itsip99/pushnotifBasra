@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "build": "npx tsc",
+    "build": "tsc && node scripts/copy-assets.js",
     "start": "nodemon dist/index.js",
     "start:api": "pm2 start dist/index.js -i 2 --name service-notif",
     "start:hris": "pm2 start dist/worker.hris.js --name worker-hris",

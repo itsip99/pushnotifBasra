@@ -4,15 +4,23 @@ import DailyRotateFile from 'winston-daily-rotate-file';
 
 const { combine, timestamp, printf } = format;
 
-// Format log dengan timestamp Asia/Shanghai
+// Timestamp sudah dalam WIB dari timezoned(), jadi tidak perlu di-parse ulang
+// dengan moment di sini (dulu dilakukan tiap baris log dan cukup mahal).
 export const myFormat = printf(({ level, message, timestamp }) => {
-    const formattedTimestamp = moment(`${timestamp}`).tz('Asia/Jakarta').format('YYYY-MM-DD HH:mm');
-    return `${formattedTimestamp} ${level}: ${message}`;
+    return `${timestamp} ${level}: ${message}`;
 });
 
-// Format timestamp untuk log harian
+// Resolusi timestamp hanya per menit, jadi hasil moment-timezone di-cache
+// dan baru dihitung ulang saat menit berganti.
+let cachedMinute = -1;
+let cachedTimestamp = '';
 const timezoned = () => {
-    return moment().tz('Asia/Jakarta').format('YYYY-MM-DD HH:mm');
+    const minute = Math.floor(Date.now() / 60000);
+    if (minute !== cachedMinute) {
+        cachedMinute = minute;
+        cachedTimestamp = moment().tz('Asia/Jakarta').format('YYYY-MM-DD HH:mm');
+    }
+    return cachedTimestamp;
 };
 
 export const logger = createLogger({
@@ -22,12 +30,8 @@ export const logger = createLogger({
         myFormat
     ),
     transports: [
-        new transports.Console({
-            format: combine(
-                timestamp({ format: timezoned }),
-                myFormat
-            ),
-        }),
+        // format sudah diterapkan di level logger; tidak diulang di transport
+        new transports.Console(),
 
         // hanya error → error log
         new DailyRotateFile({
@@ -58,12 +62,8 @@ export const loggerSuccess = createLogger({
         myFormat
     ),
     transports: [
-        new transports.Console({
-            format: combine(
-                timestamp({ format: timezoned }),
-                myFormat
-            ),
-        }),
+        // format sudah diterapkan di level logger; tidak diulang di transport
+        new transports.Console(),
 
         // Log untuk error
         new DailyRotateFile({
@@ -156,12 +156,8 @@ export const loggerErrorFlutter= createLogger({
         myFormat
     ),
     transports: [
-        new transports.Console({
-            format: combine(
-                timestamp({ format: timezoned }),
-                myFormat
-            ),
-        }),
+        // format sudah diterapkan di level logger; tidak diulang di transport
+        new transports.Console(),
 
         // Log untuk error
         new DailyRotateFile({

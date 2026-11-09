@@ -36,13 +36,10 @@ if errorlevel 1 goto :gagal
 
 :: ---- build ----
 :build
-echo [deploy] npx tsc
-call npx tsc
+:: npm run build = tsc + salin credential *.json ke dist\services (scripts\copy-assets.js)
+echo [deploy] npm run build
+call npm run build
 if errorlevel 1 goto :gagal
-
-:: tsc tidak menyalin .json -> credential disalin dari src\services ke dist\services
-robocopy src\services dist\services *.json /S /NJH /NJS /NDL /NFL /NP >nul
-if errorlevel 8 goto :gagal
 
 :: Cegah restart kalau file penting tidak ada (worker akan crash loop)
 for %%f in (dist\index.js dist\worker.hris.js dist\worker.fixupmoto.js) do (
